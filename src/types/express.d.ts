@@ -4,6 +4,6 @@ declare module 'express-serve-static-core' {
   interface Request {
     userEmail?: string;
     isAdmin?: boolean;
+    adminToken?: boolean;
   }
 }
-

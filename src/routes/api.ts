@@ -47,7 +47,8 @@ apiRouter.post('/url', async (req: Request, res: Response) => {
     if (!label || !longUrl) return res.status(400).json({ error: 'label and longUrl are required' });
     if (!isValidHttpUrl(longUrl)) return res.status(400).json({ error: 'invalid longUrl' });
 
-    const createdBy = req.isAdmin ? (email || 'system@local') : req.userEmail!;
+    // Only admin token (not group-admin) can override createdBy
+    const createdBy = req.adminToken ? (email || 'system@local') : req.userEmail!;
     const created = await shortUrlService.create({ label, longUrl, expiresAt: exp, createdBy });
     return res.status(201).json(created);
   } catch (e) {

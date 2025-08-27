@@ -31,6 +31,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
     if (ADMIN_BEARER_TOKEN && token === ADMIN_BEARER_TOKEN) {
       req.isAdmin = true;
+      req.adminToken = true; // elevated admin via secret token
       req.userEmail = undefined; // will be provided per request when creating as admin
       return next();
     }
@@ -61,7 +62,21 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
       return;
     }
 
-    req.isAdmin = false;
+    // Groups check
+    const groups = Array.isArray((payload as any).groups) ? ((payload as any).groups as string[]) : [];
+    const KEYCLOAK_USER_GROUP = (process.env.KEYCLOAK_USER_GROUP || '').trim();
+    const KEYCLOAK_ADMIN_GROUP = (process.env.KEYCLOAK_ADMIN_GROUP || '').trim();
+    const normalize = (g: string): string => g.replace(/^\//, '');
+    const hasGroup = (want: string): boolean => groups.some((g) => normalize(g) === normalize(want));
+
+    if (KEYCLOAK_USER_GROUP && !hasGroup(KEYCLOAK_USER_GROUP)) {
+      res.status(403).json({ error: 'User not in required group' });
+      return;
+    }
+
+    const isAdminGroup = KEYCLOAK_ADMIN_GROUP ? hasGroup(KEYCLOAK_ADMIN_GROUP) : false;
+
+    req.isAdmin = isAdminGroup;
     req.userEmail = email;
     return next();
   } catch (err) {

@@ -34,6 +34,31 @@ describe('auth middleware', () => {
     process.env = OLD_ENV;
   });
 
+  test('required user group denies access when missing', async () => {
+    process.env.KEYCLOAK_USER_GROUP = 'users';
+    mockJwtVerify.mockResolvedValue({ payload: { email: 'user@example.com', groups: ['/other'] } });
+    const app = await buildApp();
+    const res = await request(app).get('/t').set('Authorization', 'Bearer jwt');
+    expect(res.status).toBe(403);
+  });
+
+  test('required user group allows access when present', async () => {
+    process.env.KEYCLOAK_USER_GROUP = 'users';
+    mockJwtVerify.mockResolvedValue({ payload: { email: 'user@example.com', groups: ['/users'] } });
+    const app = await buildApp();
+    const res = await request(app).get('/t').set('Authorization', 'Bearer jwt');
+    expect(res.status).toBe(200);
+  });
+
+  test('admin group sets isAdmin', async () => {
+    process.env.KEYCLOAK_ADMIN_GROUP = 'admins';
+    mockJwtVerify.mockResolvedValue({ payload: { email: 'user@example.com', groups: ['admins'] } });
+    const app = await buildApp();
+    const res = await request(app).get('/t').set('Authorization', 'Bearer jwt');
+    expect(res.status).toBe(200);
+    expect(res.body.isAdmin).toBe(true);
+  });
+
   test('getJwks throws when not configured', async () => {
     jest.resetModules();
     delete process.env.KEYCLOAK_ISSUER_URL;

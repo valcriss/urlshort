@@ -79,10 +79,14 @@ app.get('/backend/config.js', (_req, res) => {
     realm = '';
   }
   const clientId = process.env.KEYCLOAK_CLIENT_ID || process.env.KEYCLOAK_AUDIENCE || 'urlshort';
+  const userGroup = (process.env.KEYCLOAK_USER_GROUP || '').trim();
+  const adminGroup = (process.env.KEYCLOAK_ADMIN_GROUP || '').trim();
   const cfg = {
     url: baseUrl,
     realm,
     clientId,
+    userGroup,
+    adminGroup,
   };
   res.type('application/javascript').send(`window.KEYCLOAK_CONFIG = ${JSON.stringify(cfg)};\n`);
 });

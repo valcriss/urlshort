@@ -24,6 +24,34 @@ function fmtDate(iso) {
 
 function setStatus(msg) { statusEl.textContent = msg || ''; }
 
+function normalizeGroupName(name) {
+  return (name || '').replace(/^\//, '');
+}
+
+function isAuthorized(groups, cfg) {
+  const required = normalizeGroupName(cfg.userGroup || '');
+  const admin = normalizeGroupName(cfg.adminGroup || '');
+  if (!required) return true; // no requirement
+  const set = new Set((groups || []).map(normalizeGroupName));
+  if (set.has(required)) return true;
+  if (admin && set.has(admin)) return true;
+  return false;
+}
+
+function showUnauthorized(cfg) {
+  const main = document.querySelector('main');
+  if (main) {
+    main.innerHTML = '';
+    const box = document.createElement('div');
+    box.className = 'unauthorized';
+    const req = cfg.userGroup ? `Groupe requis: ${cfg.userGroup}` : '';
+    const adminInfo = cfg.adminGroup ? `; Groupe admin: ${cfg.adminGroup}` : '';
+    box.innerHTML = `<h2>Accès non autorisé</h2><p>Vous n'êtes pas autorisé à accéder à cette application.</p><p>${req}${adminInfo}</p>`;
+    main.appendChild(box);
+  }
+  setStatus("Accès refusé");
+}
+
 async function authInit() {
   const cfg = window.KEYCLOAK_CONFIG || { url: '', realm: '', clientId: 'urlshort' };
   kc = new Keycloak({ url: cfg.url, realm: cfg.realm, clientId: cfg.clientId });
@@ -31,7 +59,13 @@ async function authInit() {
   if (!authenticated) throw new Error('not authenticated');
   token = kc.token || '';
   userEmailEl.textContent = kc.tokenParsed?.email || kc.tokenParsed?.preferred_username || '';
+  const userGroups = Array.isArray(kc.tokenParsed?.groups) ? kc.tokenParsed.groups : [];
+  if (!isAuthorized(userGroups, cfg)) {
+    showUnauthorized(cfg);
+    return false;
+  }
   scheduleTokenRefresh();
+  return true;
 }
 
 function scheduleTokenRefresh() {
@@ -202,8 +236,8 @@ async function waitForKeycloakAdapter() {
 async function main() {
   try {
     await waitForKeycloakAdapter();
-    await authInit();
-    await refreshList();
+    const ok = await authInit();
+    if (ok) await refreshList();
   } catch (e) {
     console.error(e);
     setStatus('Auth échouée');

@@ -26,6 +26,8 @@ describe('api router', () => {
     process.env = { ...OLD_ENV };
     process.env.KEYCLOAK_ISSUER_URL = 'http://kc.local/realms/test';
     process.env.ADMIN_BEARER_TOKEN = 'admin';
+    process.env.KEYCLOAK_USER_GROUP = '';
+    process.env.KEYCLOAK_ADMIN_GROUP = '';
     mockJwtVerify.mockReset();
     app = express();
     app.use(express.json());
@@ -74,6 +76,35 @@ describe('api router', () => {
     const res = await request(app).get('/api/url').query({ email: 'a@b.c' }).set('Authorization', 'Bearer admin');
     expect(res.status).toBe(200);
     expect(listByEmailAsAdmin).toHaveBeenCalledWith('a@b.c');
+  });
+
+  test('Group admin can list another user via email param', async () => {
+    jest.resetModules();
+    process.env.KEYCLOAK_ISSUER_URL = 'http://kc.local/realms/test';
+    process.env.KEYCLOAK_ADMIN_GROUP = 'admins';
+    const app2 = express();
+    app2.use(express.json());
+    const services = await import('../src/services/shortUrl.service.js');
+    const listSpy = jest.spyOn(services.shortUrlService, 'listByEmailAsAdmin');
+    listSpy.mockResolvedValue([{ code: 'x', label: 'L', longUrl: 'https://x', createdBy: 'a@b.c' } as any]);
+    const mod = await import('../src/routes/api.js');
+    app2.use('/api', mod.default);
+    mockJwtVerify.mockResolvedValue({ payload: { email: 'user@example.com', groups: ['/admins'] } });
+    const res = await request(app2).get('/api/url').query({ email: 'a@b.c' }).set('Authorization', 'Bearer userjwt');
+    expect(res.status).toBe(200);
+    expect(listSpy).toHaveBeenCalledWith('a@b.c');
+  });
+
+  test('Group admin cannot override createdBy on POST', async () => {
+    process.env.KEYCLOAK_ADMIN_GROUP = 'admins';
+    const created = { code: 'C', label: 'L', longUrl: 'https://x', createdBy: 'user@example.com' } as any;
+    create.mockImplementation(async (input: any) => {
+      expect(input.createdBy).toBe('user@example.com');
+      return created;
+    });
+    mockJwtVerify.mockResolvedValue({ payload: { email: 'user@example.com', groups: ['admins'] } });
+    const res = await request(app).post('/api/url').set('Authorization', 'Bearer userjwt').send({ label: 'L', longUrl: 'https://x', email: 'a@b.c' });
+    expect(res.status).toBe(201);
   });
 
   test('GET /api/url/:code validation and ownership', async () => {
