@@ -1,4 +1,4 @@
-import { isValidHttpUrl, parseOptionalDate, isCodeValid } from '../src/utils/validate';
+import { isValidHttpUrl, parseOptionalDate, isCodeValid } from '../src/utils/validate.js';
 
 describe('validate utils', () => {
   test('validates http/https urls', () => {
@@ -11,6 +11,7 @@ describe('validate utils', () => {
   test('parseOptionalDate', () => {
     expect(parseOptionalDate(null)).toBeNull();
     expect(parseOptionalDate('')).toBeNull();
+    expect(parseOptionalDate('not-a-date')).toBeNull();
     const d = parseOptionalDate('2024-01-01T00:00:00Z');
     expect(d).toBeInstanceOf(Date);
   });
@@ -21,4 +22,3 @@ describe('validate utils', () => {
     expect(isCodeValid('')).toBe(false);
   });
 });
-

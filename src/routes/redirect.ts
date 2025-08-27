@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+
 import { shortUrlService } from '../services/shortUrl.service.js';
 
 type CacheEntry = { longUrl: string; expiresAt: Date | null };
@@ -16,7 +17,6 @@ class LRUCache {
     return val;
   }
   set(key: string, val: CacheEntry): void {
-    if (this.map.has(key)) this.map.delete(key);
     this.map.set(key, val);
     if (this.map.size > this.max) {
       const firstKey = this.map.keys().next().value as string | undefined;
@@ -28,7 +28,7 @@ class LRUCache {
   }
 }
 
-const cache = new LRUCache(2000);
+const cache = new LRUCache(Number(process.env.REDIRECT_CACHE_MAX) || 2000);
 
 export function invalidateCacheFor(code: string): void {
   cache.delete(code);
@@ -63,7 +63,7 @@ redirectRouter.get('/:code([A-Za-z0-9]{1,32})', async (req: Request, res: Respon
 
     res.set('Cache-Control', 'no-store').set('X-Robots-Tag', 'noindex');
     return res.redirect(302, entry.longUrl);
-  } catch (e) {
+  } catch {
     return res.status(500).set('Cache-Control', 'no-store').set('X-Robots-Tag', 'noindex').send('Server error');
   }
 });

@@ -1,11 +1,11 @@
 import 'dotenv/config';
 import express from 'express';
 import helmet from 'helmet';
+import path from 'node:path';
 import pinoHttp from 'pino-http';
+
 import apiRouter from './routes/api.js';
 import redirectRouter from './routes/redirect.js';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const app = express();
 const isProd = process.env.NODE_ENV === 'production';
@@ -53,10 +53,8 @@ app.use(
 app.use(express.json());
 
 // Static assets (serves /public under root)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const publicDir = path.resolve(__dirname, '..', 'public');
-app.use(express.static(publicDir));
+const publicDir = path.resolve(process.cwd(), 'public');
+app.use(express.static(publicDir, { redirect: false }));
 
 // Healthcheck
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
@@ -104,7 +102,7 @@ app.get('/backend/keycloak.js', async (_req, res) => {
     res.setHeader('Content-Type', 'application/javascript');
     const text = await r.text();
     res.send(text);
-  } catch (e) {
+  } catch {
     res.status(500).type('text/plain').send('Keycloak adapter error');
   }
 });
@@ -123,10 +121,12 @@ app.get('/', (_req, res) => res.redirect(302, '/backend'));
 // Redirect route last
 app.use('/', redirectRouter);
 
-const port = Number(process.env.PORT || 3000);
-app.listen(port, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Server listening on http://0.0.0.0:${port}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  const port = Number(process.env.PORT || 3000);
+  app.listen(port, () => {
+    // eslint-disable-next-line no-console
+    console.log(`Server listening on http://0.0.0.0:${port}`);
+  });
+}
 
 export default app;

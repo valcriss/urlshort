@@ -1,8 +1,9 @@
 import { Router, type Request, type Response } from 'express';
-import { authMiddleware } from '../middleware/auth.js';
-import { parseOptionalDate, isCodeValid, isValidHttpUrl } from '../utils/validate.js';
-import { shortUrlService } from '../services/shortUrl.service.js';
+
 import { invalidateCacheFor } from './redirect.js';
+import { authMiddleware } from '../middleware/auth.js';
+import { shortUrlService } from '../services/shortUrl.service.js';
+import { parseOptionalDate, isCodeValid, isValidHttpUrl } from '../utils/validate.js';
 
 export const apiRouter = Router();
 
@@ -20,7 +21,7 @@ apiRouter.get('/url', async (req: Request, res: Response) => {
     const email = req.userEmail!;
     const items = await shortUrlService.listByUser(email);
     return res.json(items);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: 'Server error' });
   }
 });
@@ -38,7 +39,7 @@ apiRouter.get('/url/:code', async (req: Request, res: Response) => {
 // POST /api/url
 apiRouter.post('/url', async (req: Request, res: Response) => {
   try {
-    const { label, longUrl, expiresAt, email } = req.body ?? {};
+    const { label, longUrl, expiresAt, email } = req.body as { label?: string; longUrl?: string; expiresAt?: unknown; email?: string };
     const exp = parseOptionalDate(expiresAt);
     if (exp === null && expiresAt !== undefined && expiresAt !== null && expiresAt !== '') {
       return res.status(400).json({ error: 'invalid expiresAt' });
@@ -52,7 +53,6 @@ apiRouter.post('/url', async (req: Request, res: Response) => {
   } catch (e) {
     const msg = (e as Error).message || 'Server error';
     if (msg === 'could not generate unique code') return res.status(409).json({ error: msg });
-    if (msg === 'invalid longUrl' || msg.includes('required')) return res.status(400).json({ error: msg });
     return res.status(500).json({ error: 'Server error' });
   }
 });
@@ -60,7 +60,7 @@ apiRouter.post('/url', async (req: Request, res: Response) => {
 // PUT /api/url
 apiRouter.put('/url', async (req: Request, res: Response) => {
   try {
-    const { code, label, longUrl, expiresAt } = req.body ?? {};
+    const { code, label, longUrl, expiresAt } = req.body as { code?: string; label?: string; longUrl?: string; expiresAt?: unknown };
     if (!code || !isCodeValid(code)) return res.status(400).json({ error: 'invalid code' });
     if (longUrl !== undefined && !isValidHttpUrl(longUrl)) return res.status(400).json({ error: 'invalid longUrl' });
     const exp = parseOptionalDate(expiresAt);
@@ -88,7 +88,7 @@ apiRouter.put('/url', async (req: Request, res: Response) => {
 // DELETE /api/url
 apiRouter.delete('/url', async (req: Request, res: Response) => {
   try {
-    const { code } = req.body ?? {};
+    const { code } = req.body as { code?: string };
     if (!code || !isCodeValid(code)) return res.status(400).json({ error: 'invalid code' });
     const ok = await shortUrlService.remove(code, req.userEmail!, !!req.isAdmin);
     if (!ok) return res.status(404).json({ error: 'not found' });

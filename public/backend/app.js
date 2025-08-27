@@ -1,4 +1,3 @@
-/* global Keycloak */
 const statusEl = document.getElementById('status');
 const userEmailEl = document.getElementById('user-email');
 const addBtn = document.getElementById('add-btn');
@@ -176,7 +175,7 @@ async function submitForm(ev) {
 function confirmDelete(it) {
   confirmText.textContent = `Supprimer ${it.label} (${it.code}) ?`;
   modalConfirm.showModal();
-  const onClose = async (ev) => {
+  const onClose = async () => {
     if (modalConfirm.returnValue === 'confirm') {
       try {
         await api('/api/url', { method: 'DELETE', body: JSON.stringify({ code: it.code }) });
@@ -195,7 +194,6 @@ function confirmDelete(it) {
 async function waitForKeycloakAdapter() {
   for (let i = 0; i < 50; i++) {
     if (typeof window.Keycloak !== 'undefined') return;
-    // eslint-disable-next-line no-await-in-loop
     await new Promise((r) => setTimeout(r, 100));
   }
   throw new Error('Keycloak adapter not loaded');

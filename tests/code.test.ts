@@ -1,4 +1,4 @@
-import { generateCode } from '../src/utils/code';
+import { generateCode } from '../src/utils/code.js';
 
 describe('code generator', () => {
   test('generates correct length and charset', () => {
@@ -7,4 +7,3 @@ describe('code generator', () => {
     expect(/^[A-Za-z0-9]+$/.test(code)).toBe(true);
   });
 });
-

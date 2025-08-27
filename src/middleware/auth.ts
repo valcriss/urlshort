@@ -3,12 +3,11 @@ import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 const ADMIN_BEARER_TOKEN = process.env.ADMIN_BEARER_TOKEN;
 const KEYCLOAK_ISSUER_URL = process.env.KEYCLOAK_ISSUER_URL; // e.g., https://keycloak.example.com/realms/<realm>
-const KEYCLOAK_CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID; // used by frontend config only
 const KEYCLOAK_AUDIENCE = process.env.KEYCLOAK_AUDIENCE; // optional, can be enforced via KEYCLOAK_ENFORCE_AUDIENCE
 const KEYCLOAK_ENFORCE_AUDIENCE = process.env.KEYCLOAK_ENFORCE_AUDIENCE === 'true';
 
 let jwks: ReturnType<typeof createRemoteJWKSet> | undefined;
-function getJwks(): ReturnType<typeof createRemoteJWKSet> {
+export function getJwks(): ReturnType<typeof createRemoteJWKSet> {
   if (!KEYCLOAK_ISSUER_URL) {
     throw new Error('KEYCLOAK_ISSUER_URL not configured');
   }
@@ -66,7 +65,6 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     req.userEmail = email;
     return next();
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('Auth error', err);
     res.status(401).json({ error: 'Invalid token' });
   }

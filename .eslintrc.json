@@ -18,6 +18,16 @@
     "plugin:import/typescript",
     "prettier"
   ],
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "project": "./tsconfig.json"
+      },
+      "node": {
+        "extensions": [".ts", ".js", ".json"]
+      }
+    }
+  },
   "rules": {
     "no-console": ["error", {"allow": ["warn", "error"]}],
     "import/order": [
@@ -41,4 +51,3 @@
     }
   ]
 }
-
