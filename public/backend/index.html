@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>URL Shortener - Backend</title>
+    <link rel="icon" type="image/svg+xml" href="/backend/favicon.svg" />
+    <link rel="stylesheet" href="/backend/styles.css" />
+    <script src="/backend/config.js" defer></script>
+    <script src="/backend/keycloak.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <h1>URL Shortener - Backend</h1>
+      <div id="user-info">
+        <span id="user-email"></span>
+        <button id="logout-btn" title="Se déconnecter">Logout</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="toolbar">
+        <button id="add-btn">Ajouter</button>
+        <span id="status"></span>
+      </div>
+
+      <table id="urls-table">
+        <thead>
+          <tr>
+            <th>Label</th>
+            <th>Code</th>
+            <th>Long URL</th>
+            <th>Expiration</th>
+            <th>Clicks</th>
+            <th>Dernier accès</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </main>
+
+    <dialog id="modal-form">
+      <form method="dialog" id="url-form">
+        <h3 id="form-title">Ajouter</h3>
+        <input type="hidden" name="code" />
+        <label>
+          Label
+          <input name="label" required />
+        </label>
+        <label>
+          Long URL
+          <input name="longUrl" type="url" placeholder="https://..." required />
+        </label>
+        <label>
+          Expire le (optionnel)
+          <input name="expiresAt" type="datetime-local" />
+        </label>
+        <menu>
+          <button type="reset" id="cancel-btn">Annuler</button>
+          <button type="submit" id="save-btn">Enregistrer</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="modal-confirm">
+      <form method="dialog">
+        <p id="confirm-text">Confirmer la suppression ?</p>
+        <menu>
+          <button value="cancel">Annuler</button>
+          <button value="confirm" id="confirm-btn">Supprimer</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <template id="row-template">
+      <tr>
+        <td class="label"></td>
+        <td class="code"></td>
+        <td class="longUrl"></td>
+        <td class="expiresAt"></td>
+        <td class="clickCount"></td>
+        <td class="lastAccessAt"></td>
+        <td class="actions"></td>
+      </tr>
+    </template>
+
+    <script type="module" src="/backend/app.js" defer></script>
+  </body>
+  </html>

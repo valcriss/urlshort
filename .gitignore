@@ -1,0 +1,45 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+dist/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Logs and reports
+logs/
+*.log
+*.log.*
+*.pid
+*.pid.lock
+coverage-final.json
+jest-report/
+jest-html-reporters-*
+
+# Caches
+.eslintcache
+.cache/
+tmp/
+temp/
+
+# Editors/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Prisma
+# Keep migrations committed; nothing to ignore by default
+# prisma/dev.db*
+

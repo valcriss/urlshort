@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: urlshort-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: urlshort
+      POSTGRES_PASSWORD: urlshort
+      POSTGRES_DB: urlshort
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer:4
+    container_name: urlshort-adminer
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "8081:8080" # Open http://localhost:8081
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    container_name: urlshort-keycloak
+    command: start-dev
+    restart: unless-stopped
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_PROXY_HEADERS: xforwarded
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+    ports:
+      - "8080:8080" # Open http://localhost:8080
+    # Note: for dev we use the embedded DB. For prod, configure KC_DB=postgres
+
+volumes:
+  pgdata:
+

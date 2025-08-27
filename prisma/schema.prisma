@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ShortUrl {
+  code         String     @id @db.VarChar(32)
+  label        String     @db.VarChar(120)
+  longUrl      String     @db.Text
+  expiresAt    DateTime?  @db.Timestamptz
+  createdBy    String     @db.Text
+  updatedBy    String     @db.Text
+  createdAt    DateTime   @default(now()) @db.Timestamptz
+  updatedAt    DateTime   @updatedAt @db.Timestamptz
+  clickCount   Int        @default(0)
+  lastAccessAt DateTime?  @db.Timestamptz
+
+  @@index([expiresAt], map: "idx_short_urls_expires_at")
+  @@index([lastAccessAt], map: "idx_short_urls_last_access_at")
+}
+
