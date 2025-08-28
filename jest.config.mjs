@@ -7,6 +7,8 @@ const config = {
   testEnvironment: 'node',
   roots: ['<rootDir>/tests'],
   moduleFileExtensions: ['ts', 'js', 'json'],
+  // Only run TypeScript tests; ignore compiled JS in /tests
+  testMatch: ['<rootDir>/tests/**/*.test.ts'],
   collectCoverage: true,
   coverageProvider,
   collectCoverageFrom: [

@@ -43,3 +43,4 @@ Thumbs.db
 # Keep migrations committed; nothing to ignore by default
 # prisma/dev.db*
 
+tests/*.js

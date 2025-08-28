@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 
 export default [
   {
-    ignores: ['jest.config.ts']
+    ignores: ['jest.config.ts', 'dist/**', 'coverage/**', 'tests/**/*.js']
   },
   js.configs.recommended,
   {
