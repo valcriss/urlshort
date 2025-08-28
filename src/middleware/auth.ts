@@ -6,7 +6,7 @@ import { getAppConfiguration } from '../config/appConfig.js';
 // Cache JWKS per issuer to support dynamic env in tests and multiple realms
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 export function getJwks(issuerUrlParam?: string): ReturnType<typeof createRemoteJWKSet> {
-  const issuerUrl = (issuerUrlParam ?? process.env.KEYCLOAK_ISSUER_URL) as string | undefined;
+  const issuerUrl = (issuerUrlParam ?? getAppConfiguration().keycloakIssuerUrl) as string | undefined;
   if (!issuerUrl) {
     throw new Error('KEYCLOAK_ISSUER_URL not configured');
   }

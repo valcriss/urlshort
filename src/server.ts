@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import path from 'node:path';
 import pinoHttp from 'pino-http';
 
+import { getAppConfiguration } from './config/appConfig.js';
 import apiRouter from './routes/api.js';
 import redirectRouter from './routes/redirect.js';
 
@@ -13,7 +14,7 @@ const isProd = process.env.NODE_ENV === 'production';
 // Compute Keycloak origin for CSP connect-src
 function getKeycloakOrigin(): string | undefined {
   try {
-    const issuer = process.env.KEYCLOAK_ISSUER_URL || '';
+    const issuer = getAppConfiguration().keycloakIssuerUrl || '';
     if (!issuer) return undefined;
     const u = new URL(issuer);
     return u.origin;
@@ -61,7 +62,8 @@ app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // Admin UI config: emits JS from env to be used by the frontend
 app.get('/backend/config.js', (_req, res) => {
-  const issuer = process.env.KEYCLOAK_ISSUER_URL || '';
+  const cfgApp = getAppConfiguration();
+  const issuer = cfgApp.keycloakIssuerUrl || '';
   let baseUrl = '';
   let realm = '';
   try {
@@ -78,9 +80,9 @@ app.get('/backend/config.js', (_req, res) => {
     baseUrl = '';
     realm = '';
   }
-  const clientId = process.env.KEYCLOAK_CLIENT_ID || process.env.KEYCLOAK_AUDIENCE || 'urlshort';
-  const userGroup = (process.env.KEYCLOAK_USER_GROUP || '').trim();
-  const adminGroup = (process.env.KEYCLOAK_ADMIN_GROUP || '').trim();
+  const clientId = cfgApp.keycloakClientId || cfgApp.keycloakAudience || 'urlshort';
+  const userGroup = cfgApp.keycloakUserGroup;
+  const adminGroup = cfgApp.keycloakAdminGroup;
   const cfg = {
     url: baseUrl,
     realm,
@@ -94,7 +96,7 @@ app.get('/backend/config.js', (_req, res) => {
 // Proxy Keycloak adapter as same-origin to satisfy CSP
 app.get('/backend/keycloak.js', async (_req, res) => {
   try {
-    const issuer = process.env.KEYCLOAK_ISSUER_URL || '';
+    const issuer = getAppConfiguration().keycloakIssuerUrl || '';
     const u = new URL(issuer);
     u.pathname = '/js/keycloak.js';
     const upstream = u.toString();

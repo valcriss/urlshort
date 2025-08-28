@@ -1,6 +1,8 @@
 import express from 'express';
 import request from 'supertest';
 
+import { setAppConfiguration, TestAppConfiguration } from '../src/config/appConfig.js';
+
 // Mock jose to allow normal-user auth
 const mockJwtVerify = jest.fn();
 jest.mock('jose', () => ({
@@ -17,18 +19,19 @@ let update: jest.SpyInstance;
 let remove: jest.SpyInstance;
 
 describe('api router', () => {
-  const OLD_ENV = process.env;
   let app: express.Express;
   
 
   beforeEach(async () => {
-    jest.resetModules();
-    process.env = { ...OLD_ENV };
-    process.env.KEYCLOAK_ISSUER_URL = 'http://kc.local/realms/test';
-    process.env.ADMIN_BEARER_TOKEN = 'admin';
-    process.env.ADMIN_BEARER_TOKEN_ENABLE = 'true';
-    process.env.KEYCLOAK_USER_GROUP = '';
-    process.env.KEYCLOAK_ADMIN_GROUP = '';
+    setAppConfiguration(
+      new TestAppConfiguration({
+        keycloakIssuerUrl: 'http://kc.local/realms/test',
+        adminBearerToken: 'admin',
+        adminBearerTokenEnable: true,
+        keycloakUserGroup: '',
+        keycloakAdminGroup: ''
+      })
+    );
     mockJwtVerify.mockReset();
     app = express();
     app.use(express.json());
@@ -45,9 +48,7 @@ describe('api router', () => {
     app.use('/api', mod.default);
   });
 
-  afterAll(() => {
-    process.env = OLD_ENV;
-  });
+  
 
   function authUser(): Record<string, string> {
     mockJwtVerify.mockResolvedValue({ payload: { email: 'user@example.com' } });
@@ -80,9 +81,7 @@ describe('api router', () => {
   });
 
   test('Group admin can list another user via email param', async () => {
-    jest.resetModules();
-    process.env.KEYCLOAK_ISSUER_URL = 'http://kc.local/realms/test';
-    process.env.KEYCLOAK_ADMIN_GROUP = 'admins';
+    setAppConfiguration(new TestAppConfiguration({ keycloakIssuerUrl: 'http://kc.local/realms/test', keycloakAdminGroup: 'admins' }));
     const app2 = express();
     app2.use(express.json());
     const services = await import('../src/services/shortUrl.service.js');
@@ -97,7 +96,7 @@ describe('api router', () => {
   });
 
   test('Group admin cannot override createdBy on POST', async () => {
-    process.env.KEYCLOAK_ADMIN_GROUP = 'admins';
+    setAppConfiguration(new TestAppConfiguration({ keycloakIssuerUrl: 'http://kc.local/realms/test', keycloakAdminGroup: 'admins', adminBearerToken: 'admin', adminBearerTokenEnable: true }));
     const created = { code: 'C', label: 'L', longUrl: 'https://x', createdBy: 'user@example.com' } as any;
     create.mockImplementation(async (input: any) => {
       expect(input.createdBy).toBe('user@example.com');

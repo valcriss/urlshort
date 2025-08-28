@@ -3,6 +3,7 @@ export interface IAppConfiguration {
   adminBearerTokenEnable: boolean;
   keycloakIssuerUrl?: string;
   keycloakAudience?: string;
+  keycloakClientId?: string;
   keycloakEnforceAudience: boolean;
   keycloakUserGroup: string;
   keycloakAdminGroup: string;
@@ -20,6 +21,9 @@ export class AppConfiguration implements IAppConfiguration {
   }
   get keycloakAudience(): string | undefined {
     return process.env.KEYCLOAK_AUDIENCE;
+  }
+  get keycloakClientId(): string | undefined {
+    return process.env.KEYCLOAK_CLIENT_ID;
   }
   get keycloakEnforceAudience(): boolean {
     return process.env.KEYCLOAK_ENFORCE_AUDIENCE === 'true';
@@ -54,4 +58,3 @@ export function getAppConfiguration(): IAppConfiguration {
 export function setAppConfiguration(cfg: IAppConfiguration): void {
   currentConfig = cfg;
 }
-

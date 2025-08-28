@@ -1,14 +1,10 @@
 import request from 'supertest';
 
+import { setAppConfiguration, TestAppConfiguration } from '../src/config/appConfig.js';
+
 describe('server endpoints', () => {
-  const OLD_ENV = process.env;
   beforeEach(() => {
-    jest.resetModules();
-    process.env = { ...OLD_ENV };
-    process.env.NODE_ENV = 'test';
-  });
-  afterAll(() => {
-    process.env = OLD_ENV;
+    setAppConfiguration(new TestAppConfiguration({ keycloakIssuerUrl: undefined, keycloakClientId: undefined }));
   });
 
   test('health and backend', async () => {
@@ -29,8 +25,7 @@ describe('server endpoints', () => {
   });
 
   test('backend config parses realm', async () => {
-    process.env.KEYCLOAK_ISSUER_URL = 'http://host:8080/realms/myrealm';
-    process.env.KEYCLOAK_CLIENT_ID = 'clientX';
+    setAppConfiguration(new TestAppConfiguration({ keycloakIssuerUrl: 'http://host:8080/realms/myrealm', keycloakClientId: 'clientX' }));
     const { default: app } = await import('../src/server.js');
     const res = await request(app).get('/backend/config.js');
     expect(res.status).toBe(200);
@@ -39,7 +34,7 @@ describe('server endpoints', () => {
   });
 
   test('keycloak adapter proxy success and errors', async () => {
-    process.env.KEYCLOAK_ISSUER_URL = 'http://host:8080/realms/myrealm';
+    setAppConfiguration(new TestAppConfiguration({ keycloakIssuerUrl: 'http://host:8080/realms/myrealm' }));
     // Mock global fetch
     const g: any = global;
     const originalFetch = g.fetch;
@@ -55,7 +50,7 @@ describe('server endpoints', () => {
     expect(res.status).toBe(502);
 
     // Throwing path
-    process.env.KEYCLOAK_ISSUER_URL = '::bad::';
+    setAppConfiguration(new TestAppConfiguration({ keycloakIssuerUrl: '::bad::' }));
     res = await request(app).get('/backend/keycloak.js');
     expect(res.status).toBe(500);
     // restore

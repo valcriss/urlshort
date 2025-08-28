@@ -51,6 +51,27 @@ describe('AppConfiguration and TestAppConfiguration', () => {
     expect(testCfg.keycloakAdminGroup).toBe('ga');
   });
 
+  test('AppConfiguration defaults when env is missing', () => {
+    delete process.env.ADMIN_BEARER_TOKEN;
+    delete process.env.ADMIN_BEARER_TOKEN_ENABLE;
+    delete process.env.KEYCLOAK_ISSUER_URL;
+    delete process.env.KEYCLOAK_AUDIENCE;
+    delete process.env.KEYCLOAK_CLIENT_ID;
+    delete process.env.KEYCLOAK_ENFORCE_AUDIENCE;
+    delete process.env.KEYCLOAK_USER_GROUP;
+    delete process.env.KEYCLOAK_ADMIN_GROUP;
+
+    const cfg = new AppConfiguration();
+    expect(cfg.adminBearerToken).toBeUndefined();
+    expect(cfg.adminBearerTokenEnable).toBe(false);
+    expect(cfg.keycloakIssuerUrl).toBeUndefined();
+    expect(cfg.keycloakAudience).toBeUndefined();
+    expect(cfg.keycloakClientId).toBeUndefined();
+    expect(cfg.keycloakEnforceAudience).toBe(false);
+    expect(cfg.keycloakUserGroup).toBe('');
+    expect(cfg.keycloakAdminGroup).toBe('');
+  });
+
   test('setAppConfiguration and getAppConfiguration', () => {
     const testCfg = new TestAppConfiguration({ keycloakIssuerUrl: 'x' });
     setAppConfiguration(testCfg);
