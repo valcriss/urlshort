@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  urlshort:
+    image: danielsilvestre37/urlshort:latest
+    container_name: urlshort-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      # Runtime environment: production enables stricter security and logging
+      NODE_ENV: production
+
+      # Port listened by the app inside the container
+      PORT: "3000"
+
+      # PostgreSQL connection string (targets the compose service 'postgres')
+      # Format: postgresql://<user>:<password>@<host>:<port>/<db>?schema=public
+      DATABASE_URL: postgresql://urlshort:urlshort@postgres:5432/urlshort?schema=public
+
+      # Admin bypass token (long, random, secret). Grants elevated privileges.
+      # Use only server-side; never expose in client code. Rotate regularly.
+      ADMIN_BEARER_TOKEN: changeme-long-random-secret
+
+      # Enable/disable admin token bypass (true/false).
+      # When set to false, ADMIN_BEARER_TOKEN is ignored and Keycloak validation cannot be bypassed.
+      ADMIN_BEARER_TOKEN_ENABLE: "false"
+
+      # Keycloak issuer URL of your realm (OIDC). Example: http://keycloak:8080/realms/prod
+      KEYCLOAK_ISSUER_URL: http://keycloak:8080/realms/prod
+
+      # Enforce audience check on JWT (true/false). If true, set KEYCLOAK_AUDIENCE below.
+      KEYCLOAK_ENFORCE_AUDIENCE: "false"
+
+      # Expected audience (aud) in JWT when enforcement is enabled. Often the clientId.
+      # Leave empty if not enforcing, or set to your Keycloak client identifier.
+      KEYCLOAK_AUDIENCE: ""
+
+      # OIDC client id used by the Admin UI and for configuration hints.
+      KEYCLOAK_CLIENT_ID: urlshort
+
+      # Optional: restrict access to users in this Keycloak group (name or path)
+      # Example: urlshort_user or /urlshort_user
+      KEYCLOAK_USER_GROUP: ""
+
+      # Optional: users in this Keycloak group get admin privileges (see/delete all)
+      # Example: urlshort_admin or /urlshort_admin
+      KEYCLOAK_ADMIN_GROUP: ""
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: urlshort-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: urlshort
+      POSTGRES_PASSWORD: urlshort
+      POSTGRES_DB: urlshort
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

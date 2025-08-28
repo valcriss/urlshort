@@ -26,6 +26,7 @@ describe('api router', () => {
     process.env = { ...OLD_ENV };
     process.env.KEYCLOAK_ISSUER_URL = 'http://kc.local/realms/test';
     process.env.ADMIN_BEARER_TOKEN = 'admin';
+    process.env.ADMIN_BEARER_TOKEN_ENABLE = 'true';
     process.env.KEYCLOAK_USER_GROUP = '';
     process.env.KEYCLOAK_ADMIN_GROUP = '';
     mockJwtVerify.mockReset();

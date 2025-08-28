@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 const ADMIN_BEARER_TOKEN = process.env.ADMIN_BEARER_TOKEN;
+const ADMIN_BEARER_TOKEN_ENABLE = process.env.ADMIN_BEARER_TOKEN_ENABLE === 'true';
 const KEYCLOAK_ISSUER_URL = process.env.KEYCLOAK_ISSUER_URL; // e.g., https://keycloak.example.com/realms/<realm>
 const KEYCLOAK_AUDIENCE = process.env.KEYCLOAK_AUDIENCE; // optional, can be enforced via KEYCLOAK_ENFORCE_AUDIENCE
 const KEYCLOAK_ENFORCE_AUDIENCE = process.env.KEYCLOAK_ENFORCE_AUDIENCE === 'true';
@@ -29,7 +30,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
     const token = auth.slice('Bearer '.length).trim();
 
-    if (ADMIN_BEARER_TOKEN && token === ADMIN_BEARER_TOKEN) {
+    if (ADMIN_BEARER_TOKEN_ENABLE && ADMIN_BEARER_TOKEN && token === ADMIN_BEARER_TOKEN) {
       req.isAdmin = true;
       req.adminToken = true; // elevated admin via secret token
       req.userEmail = undefined; // will be provided per request when creating as admin

@@ -74,6 +74,7 @@ describe('auth middleware', () => {
 
   test('admin token bypass', async () => {
     process.env.ADMIN_BEARER_TOKEN = 'secret-admin';
+    process.env.ADMIN_BEARER_TOKEN_ENABLE = 'true';
     const app = await buildApp();
     const res = await request(app).get('/t').set('Authorization', 'Bearer secret-admin');
     expect(res.status).toBe(200);
