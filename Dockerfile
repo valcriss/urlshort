@@ -21,7 +21,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 
-FROM node:20-slim AS runner
+FROM node:20.19.4-slim AS runner
 ENV NODE_ENV=production
 WORKDIR /app
 
