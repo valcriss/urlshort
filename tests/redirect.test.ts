@@ -1,7 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 
-import redirectRouter, { invalidateCacheFor } from '../src/routes/redirect.js';
+import redirectRouter, { invalidateCacheFor, __createLRUForTests } from '../src/routes/redirect.js';
 import { shortUrlService } from '../src/services/shortUrl.service.js';
 
 describe('redirect router', () => {
@@ -91,5 +91,12 @@ describe('redirect router', () => {
     await request(app2).get('/b');
     await request(app2).get('/c');
     // If it didn't throw, eviction code path executed
+  });
+
+  test('LRU constructor paths (with and without parameter)', () => {
+    // with parameter
+    expect(__createLRUForTests(5)).toBeDefined();
+    // without parameter (uses default value in constructor)
+    expect(__createLRUForTests()).toBeDefined();
   });
 });

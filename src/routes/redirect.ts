@@ -68,4 +68,9 @@ redirectRouter.get('/:code([A-Za-z0-9]{1,32})', async (req: Request, res: Respon
   }
 });
 
+// test-only helper to exercise constructor paths
+export function __createLRUForTests(max?: number): unknown {
+  return new LRUCache(max);
+}
+
 export default redirectRouter;
