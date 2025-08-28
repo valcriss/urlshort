@@ -16,10 +16,10 @@ jobs:
       - name: 🧾 Checkout du code
         uses: actions/checkout@v3
 
-      - name: 🟢 Setup Node.js
+      - name: 🟢 Setup Node.js (align with local)
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - name: 📦 Installation des dépendances

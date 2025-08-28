@@ -1,6 +1,6 @@
-# Multi-stage production Dockerfile for urlshort (Node.js 20 + Prisma)
+# Multi-stage production Dockerfile for urlshort (Node.js 24 + Prisma)
 
-FROM node:20-slim AS builder
+FROM node:24-slim AS builder
 WORKDIR /app
 
 # Install dependencies
@@ -21,7 +21,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 
-FROM node:20.19.4-slim AS runner
+FROM node:24-slim AS runner
 ENV NODE_ENV=production
 WORKDIR /app
 
@@ -39,4 +39,3 @@ COPY package*.json ./
 EXPOSE 3000
 USER node
 CMD ["tini", "--", "node", "dist/server.js"]
-
