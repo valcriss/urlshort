@@ -1,4 +1,4 @@
-# UrlShort — Self‑Hosted URL Shortener
+# UrlShort — Self‑Hosted URL Shortener [![CI](https://github.com/valcriss/urlshort/actions/workflows/ci.yml/badge.svg)](https://github.com/valcriss/urlshort/actions/workflows/ci.yml)
 
 UrlShort is a secure, extensible, self‑hosted URL shortener. It provides a public redirection endpoint, a Keycloak‑protected admin UI, and a JSON REST API. Every short URL is owned by its creator (Keycloak email), and click statistics are captured on each successful redirect.
 
