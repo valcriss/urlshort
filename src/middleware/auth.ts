@@ -1,6 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
+import { getAppConfiguration } from '../config/appConfig.js';
+
 // Cache JWKS per issuer to support dynamic env in tests and multiple realms
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 export function getJwks(issuerUrlParam?: string): ReturnType<typeof createRemoteJWKSet> {
@@ -29,12 +31,13 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
     const token = auth.slice('Bearer '.length).trim();
 
-    // Read env dynamically to avoid stale values in long-lived module scope
-    const ADMIN_BEARER_TOKEN = process.env.ADMIN_BEARER_TOKEN;
-    const ADMIN_BEARER_TOKEN_ENABLE = process.env.ADMIN_BEARER_TOKEN_ENABLE === 'true';
-    const KEYCLOAK_ISSUER_URL = process.env.KEYCLOAK_ISSUER_URL; // e.g., https://keycloak.example.com/realms/<realm>
-    const KEYCLOAK_AUDIENCE = process.env.KEYCLOAK_AUDIENCE; // optional, can be enforced via KEYCLOAK_ENFORCE_AUDIENCE
-    const KEYCLOAK_ENFORCE_AUDIENCE = process.env.KEYCLOAK_ENFORCE_AUDIENCE === 'true';
+    // Use centralized configuration
+    const cfg = getAppConfiguration();
+    const ADMIN_BEARER_TOKEN = cfg.adminBearerToken;
+    const ADMIN_BEARER_TOKEN_ENABLE = cfg.adminBearerTokenEnable;
+    const KEYCLOAK_ISSUER_URL = cfg.keycloakIssuerUrl; // e.g., https://keycloak.example.com/realms/<realm>
+    const KEYCLOAK_AUDIENCE = cfg.keycloakAudience; // optional, can be enforced via KEYCLOAK_ENFORCE_AUDIENCE
+    const KEYCLOAK_ENFORCE_AUDIENCE = cfg.keycloakEnforceAudience;
 
     if (ADMIN_BEARER_TOKEN_ENABLE && ADMIN_BEARER_TOKEN && token === ADMIN_BEARER_TOKEN) {
       req.isAdmin = true;
@@ -71,8 +74,8 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
     // Groups check
     const groups = Array.isArray((payload as any).groups) ? ((payload as any).groups as string[]) : [];
-    const KEYCLOAK_USER_GROUP = (process.env.KEYCLOAK_USER_GROUP || '').trim();
-    const KEYCLOAK_ADMIN_GROUP = (process.env.KEYCLOAK_ADMIN_GROUP || '').trim();
+    const KEYCLOAK_USER_GROUP = getAppConfiguration().keycloakUserGroup;
+    const KEYCLOAK_ADMIN_GROUP = getAppConfiguration().keycloakAdminGroup;
     const normalize = (g: string): string => g.replace(/^\//, '');
     const hasGroup = (want: string): boolean => groups.some((g) => normalize(g) === normalize(want));
 
