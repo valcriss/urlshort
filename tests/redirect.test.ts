@@ -67,6 +67,15 @@ describe('redirect router', () => {
     expect(res.status).toBe(500);
   });
 
+  test('302 redirect when expiresAt is in the future', async () => {
+    const future = new Date(Date.now() + 60_000);
+    getByCode.mockResolvedValue({ longUrl: 'https://example.com', expiresAt: future } as any);
+    incr.mockResolvedValue({} as any);
+    const res = await request(app).get('/FUTURE1');
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe('https://example.com');
+  });
+
   test('LRU eviction branch', async () => {
     // Reload module with small cache size to hit eviction branch
     jest.resetModules();
