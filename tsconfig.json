@@ -14,9 +14,11 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "sourceMap": true,
+    "inlineSourceMap": true,
+    "inlineSources": true
   },
   "include": ["src", "tests"],
   "exclude": ["node_modules", "dist"]
 }
-

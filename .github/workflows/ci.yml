@@ -29,4 +29,6 @@ jobs:
         run: npm run lint
 
       - name: 🧪 Tests + Coverage
-        run: npm run test
+        run: |
+          npx jest --clearCache
+          npm run test
