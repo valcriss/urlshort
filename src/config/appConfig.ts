@@ -1,4 +1,5 @@
 export interface IAppConfiguration {
+  nodeEnv?: string;
   adminBearerToken?: string;
   adminBearerTokenEnable: boolean;
   keycloakIssuerUrl?: string;
@@ -10,6 +11,9 @@ export interface IAppConfiguration {
 }
 
 export class AppConfiguration implements IAppConfiguration {
+  get nodeEnv(): string | undefined {
+    return process.env.NODE_ENV;
+  }
   get adminBearerToken(): string | undefined {
     return process.env.ADMIN_BEARER_TOKEN;
   }
@@ -40,6 +44,7 @@ export class TestAppConfiguration implements IAppConfiguration {
   constructor(init?: Partial<IAppConfiguration>) {
     if (init) Object.assign(this, init);
   }
+  nodeEnv?: string;
   adminBearerToken?: string;
   adminBearerTokenEnable: boolean = false;
   keycloakIssuerUrl?: string;
@@ -47,6 +52,7 @@ export class TestAppConfiguration implements IAppConfiguration {
   keycloakEnforceAudience: boolean = false;
   keycloakUserGroup: string = '';
   keycloakAdminGroup: string = '';
+  keycloakClientId?: string;
 }
 
 let currentConfig: IAppConfiguration = new AppConfiguration();

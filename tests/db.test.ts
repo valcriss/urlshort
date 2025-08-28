@@ -1,15 +1,15 @@
-describe('db client export', () => {
-  const OLD_ENV = process.env;
+import { AppConfiguration, TestAppConfiguration, setAppConfiguration } from '../src/config/appConfig.js';
 
+describe('db client export', () => {
   afterEach(() => {
     jest.resetModules();
-    process.env = OLD_ENV;
+    setAppConfiguration(new AppConfiguration());
     jest.dontMock('@prisma/client');
     jest.resetAllMocks();
   });
 
   test('exports stub in test env', async () => {
-    process.env = { ...OLD_ENV, NODE_ENV: 'test' };
+    setAppConfiguration(new TestAppConfiguration({ nodeEnv: 'test' }));
     const { prisma } = await import('../src/db.js');
     expect(prisma).toBeDefined();
     expect(typeof prisma.shortUrl.findUnique).toBe('function');
@@ -23,13 +23,17 @@ describe('db client export', () => {
 
   test('exports real client in non-test env (mocked)', async () => {
     // Mock @prisma/client to avoid requiring generated client
-    jest.doMock('@prisma/client', () => ({
-      PrismaClient: class {
-        shortUrl = { findUnique: async () => null } as any;
-      }
-    }), { virtual: true });
+    jest.doMock(
+      '@prisma/client',
+      () => ({
+        PrismaClient: class {
+          shortUrl = { findUnique: async () => null } as any;
+        }
+      }),
+      { virtual: true }
+    );
 
-    process.env = { ...OLD_ENV, NODE_ENV: 'production' };
+    setAppConfiguration(new TestAppConfiguration({ nodeEnv: 'production' }));
     jest.resetModules();
     const { prisma } = await import('../src/db.js');
     expect(prisma).toBeDefined();
