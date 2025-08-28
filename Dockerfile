@@ -9,6 +9,7 @@ RUN npm ci
 
 # Copy sources
 COPY tsconfig.json ./
+COPY tsconfig.build.json ./
 COPY prisma ./prisma
 COPY src ./src
 COPY public ./public
