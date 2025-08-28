@@ -1,20 +1,19 @@
 import type { Request, Response, NextFunction } from 'express';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
-const ADMIN_BEARER_TOKEN = process.env.ADMIN_BEARER_TOKEN;
-const ADMIN_BEARER_TOKEN_ENABLE = process.env.ADMIN_BEARER_TOKEN_ENABLE === 'true';
-const KEYCLOAK_ISSUER_URL = process.env.KEYCLOAK_ISSUER_URL; // e.g., https://keycloak.example.com/realms/<realm>
-const KEYCLOAK_AUDIENCE = process.env.KEYCLOAK_AUDIENCE; // optional, can be enforced via KEYCLOAK_ENFORCE_AUDIENCE
-const KEYCLOAK_ENFORCE_AUDIENCE = process.env.KEYCLOAK_ENFORCE_AUDIENCE === 'true';
-
-let jwks: ReturnType<typeof createRemoteJWKSet> | undefined;
-export function getJwks(): ReturnType<typeof createRemoteJWKSet> {
-  if (!KEYCLOAK_ISSUER_URL) {
+// Cache JWKS per issuer to support dynamic env in tests and multiple realms
+const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
+export function getJwks(issuerUrlParam?: string): ReturnType<typeof createRemoteJWKSet> {
+  const issuerUrl = (issuerUrlParam ?? process.env.KEYCLOAK_ISSUER_URL) as string | undefined;
+  if (!issuerUrl) {
     throw new Error('KEYCLOAK_ISSUER_URL not configured');
   }
+  const base = issuerUrl.replace(/\/$/, '');
+  let jwks = jwksCache.get(base);
   if (!jwks) {
-    const jwksUrl = new URL(KEYCLOAK_ISSUER_URL.replace(/\/$/, '') + '/protocol/openid-connect/certs');
+    const jwksUrl = new URL(base + '/protocol/openid-connect/certs');
     jwks = createRemoteJWKSet(jwksUrl);
+    jwksCache.set(base, jwks);
   }
   return jwks;
 }
@@ -30,6 +29,13 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
     const token = auth.slice('Bearer '.length).trim();
 
+    // Read env dynamically to avoid stale values in long-lived module scope
+    const ADMIN_BEARER_TOKEN = process.env.ADMIN_BEARER_TOKEN;
+    const ADMIN_BEARER_TOKEN_ENABLE = process.env.ADMIN_BEARER_TOKEN_ENABLE === 'true';
+    const KEYCLOAK_ISSUER_URL = process.env.KEYCLOAK_ISSUER_URL; // e.g., https://keycloak.example.com/realms/<realm>
+    const KEYCLOAK_AUDIENCE = process.env.KEYCLOAK_AUDIENCE; // optional, can be enforced via KEYCLOAK_ENFORCE_AUDIENCE
+    const KEYCLOAK_ENFORCE_AUDIENCE = process.env.KEYCLOAK_ENFORCE_AUDIENCE === 'true';
+
     if (ADMIN_BEARER_TOKEN_ENABLE && ADMIN_BEARER_TOKEN && token === ADMIN_BEARER_TOKEN) {
       req.isAdmin = true;
       req.adminToken = true; // elevated admin via secret token
@@ -42,7 +48,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
       return;
     }
 
-    const { payload } = await jwtVerify(token, getJwks(), {
+    const { payload } = await jwtVerify(token, getJwks(KEYCLOAK_ISSUER_URL), {
       issuer: KEYCLOAK_ISSUER_URL,
       // Do not pass audience here to keep dev flexible; optionally enforce below
     });
