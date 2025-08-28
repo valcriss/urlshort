@@ -1,6 +1,7 @@
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
 export function generateCode(length = 6): string {
+  if (length <= 0) return '';
   let out = '';
   for (let i = 0; i < length; i++) {
     const idx = Math.floor(Math.random() * ALPHABET.length);
@@ -8,4 +9,3 @@ export function generateCode(length = 6): string {
   }
   return out;
 }
-

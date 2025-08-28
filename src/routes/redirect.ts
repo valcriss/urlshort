@@ -19,8 +19,8 @@ class LRUCache {
   set(key: string, val: CacheEntry): void {
     this.map.set(key, val);
     if (this.map.size > this.max) {
-      const firstKey = this.map.keys().next().value as string | undefined;
-      if (firstKey) this.map.delete(firstKey);
+      const firstKey = this.map.keys().next().value as string;
+      this.map.delete(firstKey);
     }
   }
   delete(key: string): void {

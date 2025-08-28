@@ -52,6 +52,15 @@ describe('redirect router', () => {
     expect(getByCode).toHaveBeenCalledTimes(2);
   });
 
+  test('stats update rejection is ignored', async () => {
+    const item = { longUrl: 'https://example.com', expiresAt: null };
+    getByCode.mockResolvedValue(item as any);
+    incr.mockRejectedValueOnce(new Error('boom'));
+    const res = await request(app).get('/IGNORED');
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe('https://example.com');
+  });
+
   test('500 on unexpected error', async () => {
     getByCode.mockRejectedValue(new Error('db down'));
     const res = await request(app).get('/ERR500');
