@@ -1,8 +1,9 @@
-import { prisma } from '../src/db.js';
+import { getPrisma } from '../src/db.js';
 import { shortUrlService } from '../src/services/shortUrl.service.js';
 import * as codeUtil from '../src/utils/code.js';
 
 describe('ShortUrlService', () => {
+  const prisma = getPrisma();
   const createSpy = jest.spyOn(prisma.shortUrl, 'create');
   const findUniqueSpy = jest.spyOn(prisma.shortUrl, 'findUnique');
   const findManySpy = jest.spyOn(prisma.shortUrl, 'findMany');

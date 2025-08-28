@@ -10,7 +10,9 @@ describe('db client export', () => {
 
   test('exports stub in test env', async () => {
     setAppConfiguration(new TestAppConfiguration({ nodeEnv: 'test' }));
-    const { prisma } = await import('../src/db.js');
+    const { getPrisma, __resetPrismaForTests } = await import('../src/db.js');
+    __resetPrismaForTests();
+    const prisma = getPrisma();
     expect(prisma).toBeDefined();
     expect(typeof prisma.shortUrl.findUnique).toBe('function');
     await expect(prisma.shortUrl.findUnique()).resolves.toBeNull();
@@ -33,9 +35,13 @@ describe('db client export', () => {
       { virtual: true }
     );
 
-    setAppConfiguration(new TestAppConfiguration({ nodeEnv: 'production' }));
+    // Reset module registry and re-inject configuration on the fresh instance
     jest.resetModules();
-    const { prisma } = await import('../src/db.js');
+    const cfgMod = await import('../src/config/appConfig.js');
+    cfgMod.setAppConfiguration(new cfgMod.TestAppConfiguration({ nodeEnv: 'production' }));
+    const { getPrisma, __resetPrismaForTests } = await import('../src/db.js');
+    __resetPrismaForTests();
+    const prisma = getPrisma();
     expect(prisma).toBeDefined();
     expect(prisma.shortUrl).toBeDefined();
     await expect(prisma.shortUrl.findUnique()).resolves.toBeNull();

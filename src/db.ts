@@ -2,12 +2,12 @@ import { PrismaClient } from '@prisma/client';
 
 import { getAppConfiguration } from './config/appConfig.js';
 
-// In tests, avoid requiring a real generated Prisma client/connection.
-// Provide a minimal in-memory stub that tests can spy on.
-const isTest = getAppConfiguration().nodeEnv === 'test';
+let prismaInstance: any | undefined;
 
-export const prisma: any = isTest
-  ? {
+function buildPrisma(): any {
+  const isTest = getAppConfiguration().nodeEnv === 'test';
+  if (isTest) {
+    return {
       shortUrl: {
         findUnique: async () => null,
         findMany: async () => [],
@@ -21,5 +21,19 @@ export const prisma: any = isTest
           throw new Error('not implemented');
         }
       }
-    }
-  : new PrismaClient();
+    };
+  }
+  return new PrismaClient();
+}
+
+export function getPrisma(): any {
+  if (!prismaInstance) {
+    prismaInstance = buildPrisma();
+  }
+  return prismaInstance;
+}
+
+// Test-only helper to rebuild prisma when configuration changes between tests
+export function __resetPrismaForTests(): void {
+  prismaInstance = undefined;
+}

@@ -1,4 +1,4 @@
-import { prisma } from '../db.js';
+import { getPrisma } from '../db.js';
 import { generateCode } from '../utils/code.js';
 import { isValidHttpUrl } from '../utils/validate.js';
 
@@ -33,18 +33,18 @@ export interface UpdateUrlInput {
 
 export class ShortUrlService {
   async getByCode(code: string): Promise<ShortUrlRecord | null> {
-    return prisma.shortUrl.findUnique({ where: { code } });
+    return getPrisma().shortUrl.findUnique({ where: { code } });
   }
 
   async listByUser(email: string): Promise<ShortUrlRecord[]> {
-    return prisma.shortUrl.findMany({
+    return getPrisma().shortUrl.findMany({
       where: { createdBy: email },
       orderBy: { createdAt: 'desc' }
     });
   }
 
   async listByEmailAsAdmin(email: string): Promise<ShortUrlRecord[]> {
-    return prisma.shortUrl.findMany({
+    return getPrisma().shortUrl.findMany({
       where: { createdBy: email },
       orderBy: { createdAt: 'desc' }
     });
@@ -59,7 +59,7 @@ export class ShortUrlService {
     while (attempts < 5) {
       const code = generateCode(6);
       try {
-        return await prisma.shortUrl.create({
+        return await getPrisma().shortUrl.create({
           data: {
             code,
             label: input.label.trim(),
@@ -78,7 +78,7 @@ export class ShortUrlService {
   }
 
   async update(input: UpdateUrlInput, requesterEmail: string, isAdmin: boolean): Promise<ShortUrlRecord | null> {
-    const existing = await prisma.shortUrl.findUnique({ where: { code: input.code } });
+    const existing = await getPrisma().shortUrl.findUnique({ where: { code: input.code } });
     if (!existing) return null;
     if (!isAdmin && existing.createdBy !== requesterEmail) {
       throw new Error('forbidden');
@@ -88,7 +88,7 @@ export class ShortUrlService {
       throw new Error('invalid longUrl');
     }
 
-    return prisma.shortUrl.update({
+    return getPrisma().shortUrl.update({
       where: { code: input.code },
       data: {
         label: input.label ?? existing.label,
@@ -100,17 +100,17 @@ export class ShortUrlService {
   }
 
   async remove(code: string, requesterEmail: string, isAdmin: boolean): Promise<boolean> {
-    const existing = await prisma.shortUrl.findUnique({ where: { code } });
+    const existing = await getPrisma().shortUrl.findUnique({ where: { code } });
     if (!existing) return false;
     if (!isAdmin && existing.createdBy !== requesterEmail) {
       throw new Error('forbidden');
     }
-    await prisma.shortUrl.delete({ where: { code } });
+    await getPrisma().shortUrl.delete({ where: { code } });
     return true;
   }
 
   async incrementStatsOnRedirect(code: string): Promise<ShortUrlRecord> {
-    return prisma.shortUrl.update({
+    return getPrisma().shortUrl.update({
       where: { code },
       data: {
         clickCount: { increment: 1 },
