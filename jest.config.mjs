@@ -1,11 +1,14 @@
 /** @type {import('jest').Config} */
+// Use globalThis to avoid ESLint no-undef in non-Node contexts
+const coverageProvider = (globalThis.process?.env?.JEST_COVERAGE === 'babel') ? 'babel' : 'v8';
+
 const config = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   roots: ['<rootDir>/tests'],
   moduleFileExtensions: ['ts', 'js', 'json'],
   collectCoverage: true,
-  coverageProvider: 'v8',
+  coverageProvider,
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/server.ts',
