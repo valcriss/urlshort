@@ -31,12 +31,21 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates libssl3 tini \
   && rm -rf /var/lib/apt/lists/*
 
+# Install Prisma CLI globally for runtime migrations
+RUN npm i -g prisma@5.18.0
+
 # Copy production node_modules and build artifacts
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY public ./public
+COPY prisma ./prisma
 COPY package*.json ./
 
+# Add entrypoint to apply migrations before starting the app
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 EXPOSE 3000
+ENTRYPOINT ["tini", "--", "/app/entrypoint.sh"]
 USER node
-CMD ["tini", "--", "node", "dist/server.js"]
+CMD ["node", "dist/server.js"]
